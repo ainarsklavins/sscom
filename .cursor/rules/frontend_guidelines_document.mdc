@@ -1,0 +1,92 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Frontend Guideline Document
+
+This document outlines the frontend architecture, design principles, and technologies used for our ss.com real estate monitoring service. It is written using everyday language to ensure clarity for anyone reading it, regardless of technical background.
+
+## 1. Frontend Architecture
+
+Our frontend is built using Next.js, which is a modern framework that combines the best features of React with server-side rendering and static site generation. This approach supports scalability (handling more data as needed), maintainability (easy to update and manage code), and performance (quick load times and efficient data processing).
+
+Key points include:
+
+- **Framework:** We use Next.js for its robust features and smooth integration with modern web practices.
+- **Server-side and Client-side:** Next.js allows us to render parts of our website on the server and on the client, ensuring speed and efficiency.
+- **Scalability:** The structure makes it easy to add more pages or increase functionality if needed in the future.
+
+## 2. Design Principles
+
+Our design focuses on the following key ideas:
+
+- **Usability:** The interface is simple and easy to use, even though our current project doesn’t include a UI for filtering since it’s a personal tool. Should the need arise, it will be straightforward to add intuitive controls.
+- **Accessibility:** We commit to making the frontend accessible. This means following best practices such as clear fonts and appropriate contrast levels so everyone can comfortably view and interact with the application.
+- **Responsiveness:** The design adapts well to different screen sizes. Whether you view it on a desktop or a mobile device, the layout remains consistent and easy to navigate.
+
+These principles guarantee that the user has a seamless and pleasant experience while interacting with the application or viewing generated reports.
+
+## 3. Styling and Theming
+
+For styling our application, we follow modern and clean guidelines. Here’s how we approach it:
+
+- **Methodology:** We use CSS Modules combined with a CSS-in-JS approach that Next.js supports, allowing for modular, clean, and maintainable styles. We follow a BEM-like naming convention to keep things organized and prevent style conflicts.
+- **Preprocessor/Framework:** We integrate tools like SASS for writing more manageable and organized styles. When needed, we can also bring in Tailwind CSS to further speed up development with its utility-first approach.
+- **Style Guide:** The visual style is modern with flat design elements and a touch of minimalism. The look is clean, easy on the eyes, and functional.
+- **Color Palette:**
+  - Primary: #3498db (a strong, trustful blue)
+  - Secondary: #2ecc71 (a refreshing green for accents and highlights)
+  - Accent: #e74c3c (a vibrant red to draw attention when necessary)
+  - Neutral: #f5f5f5 (light backgrounds) and #2c3e50 (for text and primary icons)
+- **Font:** The recommended font is 'Roboto' for its modern, simple, and easy-to-read style, which matches the overall design ethos of our application.
+
+## 4. Component Structure
+
+Our application follows a component-based architecture. This means that:
+
+- **Organization:** Each interface element is divided into reusable components. For example, a card displaying a real estate listing is a component that can be reused in different parts of the interface.
+- **Hierarchy:** Components are organized in a logical structure. Smaller components (buttons, data fields) are embedded within larger ones (listing cards, summary sections).
+- **Benefit:** A component-based structure makes maintenance easier since updates to a single component reflect wherever it is used, reducing redundancy and potential errors.
+
+## 5. State Management
+
+Although our project’s frontend is relatively simple, we ensure smooth data handling by:
+
+- **Local State:** Using React’s built-in hooks like useState and useContext to manage data in individual components.
+- **Shared State:** If the application grows or if we need to share data across different parts of the app, we can easily integrate libraries like Redux to maintain global state in an organized manner.
+- **Consistency:** This controlled state management ensures that data changes are predictable and the user experience remains smooth.
+
+## 6. Routing and Navigation
+
+Navigation within our application is simple and efficient thanks to Next.js:
+
+- **Built-in Routing:** Next.js uses a file-based routing system, meaning that each file in the pages folder automatically becomes a route. This minimizes configuration and speeds up development.
+- **Navigation Structure:** Although our project is primarily focused on backend tasks (like email summaries), we might include basic pages for status information or logs. The routing structure is designed to be clear and easily extendable if more pages are added in the future.
+
+## 7. Performance Optimization
+
+We implement several strategies to keep our frontend fast and responsive:
+
+- **Lazy Loading:** Load heavier components or images only when they are needed instead of all at once.
+- **Code Splitting:** Break down the application’s code into smaller bundles so the browser loads only what it needs.
+- **Asset Optimization:** Compress and optimize images, fonts, and other assets to ensure quick downloads and smooth performance.
+
+These measures work together to create reduction in loading times and improved responsiveness, contributing to an overall smoother experience.
+
+## 8. Testing and Quality Assurance
+
+Even with a simple personal project setup, ensuring reliability is key:
+
+- **Unit Tests:** We use frameworks like Jest to test individual functions and components.
+- **Integration Tests:** React Testing Library helps us verify that components work well together and the UI behaves as expected.
+- **End-to-End Tests:** Tools such as Cypress are employed to simulate real user interactions, ensuring the whole system works in unison.
+- **Continuous Quality:** Regular testing cycles and automated tests keep our code reliable and catch issues early.
+
+## 9. Conclusion and Overall Frontend Summary
+
+In summary, our frontend setup is designed to be clean, modern, and efficient using Next.js with a focus on maintainable design. We follow best practices in component design, state management, and performance optimization. The design is guided by principles of usability, accessibility, and responsiveness, ensuring that even as a personal project the experience is smooth and professional.
+
+Unique aspects include a careful yet lightweight styling approach with a modern flat design, a clear routing system courtesy of Next.js, and robust testing practices to ensure reliability. This approach ensures that even though the tool is primarily for monitoring and email summaries, the user-side experience remains intuitive and future-proof should the project expand.

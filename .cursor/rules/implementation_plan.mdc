@@ -1,0 +1,109 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Implementation plan
+
+This plan details step-by-step instructions for building the real estate listing monitoring service for ss.com using Next.js 14 and Resend as described in the project summary.
+
+---
+
+## Phase 1: Environment Setup
+
+1. **Prevalidation**: In the project root, check if a project already exists by verifying the presence of `package.json` (e.g., run `ls package.json`). [Reference: Project Goal]
+
+2. **Install Core Tools**: Ensure Node.js is installed (recommended version as per your environment). Validate with `node -v`. [Reference: Tech Stack]
+
+3. **Initialize Next.js Project**: Create a new Next.js project ensuring Next.js 14 is used (Next.js 14 is better suited for current AI coding tools and LLM models). You can initialize by running: 
+   ```bash
+   npx create-next-app@latest my-real-estate-monitor
+   ```
+   Then, update the dependency in `package.json` to exactly "next": "14.0.0" and run `npm install` to enforce Next.js 14.
+   [Reference: Tech Stack]
+
+4. **Directory Structure Check**: Validate that the project directory now contains key files (`package.json`, `/pages`, etc.). [Reference: PRD]
+
+5. **Setup Code Assistance Tools**: Make sure any selected AI coding tools (Claude 3.7 Sonnet, Claude 3.5 Sonnet, GPT o1, GPT o3-mini, Cursor) are activated per your workflow. [Reference: Tech Stack]
+
+---
+
+## Phase 2: Scraper and Filtering Module Development
+
+6. **Create Scraper File**: Create a new file at `/lib/scraper.js`. This module will fetch pages from ss.com. [Reference: Project Goal]
+
+7. **Implement Pagination Logic**: In `/lib/scraper.js`, code a function that iterates through listing pages (up to 10 pages by default, but configurable). Use URLs such as `https://www.ss.com/lv/real-estate/flats/riga/centre/sell/page{n}.html` where `n` is the page number. [Reference: Project Goal]
+
+8. **Implement Gentle Scraping**: Within the scraper function, include a delay (e.g., using `setTimeout` or `await new Promise(res => setTimeout(res, delay))`) between consecutive page requests to mitigate rate limiting. [Reference: Important Considerations]
+
+9. **Add Error Handling in Scraper**: Wrap each HTTP request (e.g., using fetch) in a try-catch block to catch errors, and log them. In case of an error, the scraper should notify the user via email (integrated later). [Reference: Key Requirements: Error Handling]
+
+10. **Validation**: Run the scraper manually (e.g., via a temporary script) to check it is fetching HTML data from the first page. [Reference: Q&A]
+
+11. **Create Filtering Module**: Create a file at `/lib/filter.js`. This module will contain functions to filter listing data based on static criteria including posting date, address, room count, square meters, floor count, m2 price, and total price. [Reference: Key Requirements: Filtering Criteria]
+
+12. **Implement Filtering Function**: In `/lib/filter.js`, create and export a function that accepts a list of listings (raw data parsed from the scraper) and returns only those that meet the hardcoded filtering criteria. [Reference: Project Goal]
+
+13. **Validation**: Write a simple test or run the filtering function with mock data to ensure it returns the correct filtered results. [Reference: Q&A]
+
+---
+
+## Phase 3: Email Notification Setup using Resend
+
+14. **Install Resend Library**: In the project root, run `npm install resend` to add Resend’s Node library. [Reference: Tech Stack]
+
+15. **Create Email Module**: Create a file at `/lib/email.js`. This module will send daily email summaries. [Reference: Project Goal]
+
+16. **Implement Email Function**: In `/lib/email.js`, write a function that accepts a list of filtered listings and composes an email summary including all data about each real estate plus a link to each listing. Use the Resend API inside this function (make sure to utilize an environment variable for the Resend API key). [Reference: Key Requirements: Email Summaries]
+
+17. **Validation**: Test the email function locally by simulating a call with mock data to ensure the email payload is correctly formed (you may log the payload instead of sending an actual email). [Reference: Q&A]
+
+---
+
+## Phase 4: Integration and Scheduler
+
+18. **Create Serverless API Endpoint**: In the `/pages/api` directory, create a file named `run-monitor.js`. This endpoint will trigger the whole process: scraping, filtering, and emailing.
+
+19. **Integrate Modules in API Endpoint**: In `/pages/api/run-monitor.js`, import functions from `/lib/scraper.js`, `/lib/filter.js`, and `/lib/email.js`. Chain these functions so that when the endpoint is hit, the app: 
+    - Scrapes up to 10 pages from ss.com.
+    - Filters the listings based on criteria.
+    - Sends an email summary via Resend with the results.
+   [Reference: Project Goal]
+
+20. **Implement Endpoint Error Handling**: Add error handling in the API endpoint so that any failures (e.g., website structure change) return an error response and log the issue. [Reference: Key Requirements: Error Handling]
+
+21. **Validation**: Test the API endpoint locally by navigating to `http://localhost:3000/api/run-monitor` and confirming that it returns a success message (or detailed output) and logs any errors for troubleshooting. [Reference: Q&A]
+
+22. **Schedule Daily Execution**: Since the service must run daily at 6:00 AM EET, choose one of the following:
+    - **Option A (Local or Self-hosted Cron)**: Install the `node-cron` package (`npm install node-cron`) and create a file at `/scripts/scheduler.js` that imports the monitoring function from the API endpoint logic. Schedule it with the cron expression corresponding to 6:00 AM EET. 
+    - **Option B (Vercel Cron Jobs)**: If you deploy on Vercel, configure a cron job through Vercel’s dashboard to call the `/api/run-monitor` endpoint daily at 6:00 AM EET. [Reference: Key Requirements: Monitoring Schedule]
+
+23. **Validation**: Run the scheduler locally (or trigger the Vercel Cron Job manually) to ensure the daily trigger is functioning as intended. [Reference: Q&A]
+
+---
+
+## Phase 5: Deployment
+
+24. **Prepare for Deployment**: Commit all changes and push the repository to version control (e.g., GitHub). [Reference: PRD]
+
+25. **Configure Environment Variables**: In your deployment environment (Vercel or other host), set the required environment variables such as the Resend API key. [Reference: Key Requirements: Email Summaries]
+
+26. **Deploy Next.js App**: Deploy the Next.js project (now using Next.js 14) to your preferred hosting provider (if using Vercel, follow their standard deployment process). [Reference: Deployment]
+
+27. **Validation After Deployment**: After deployment, test the `/api/run-monitor` endpoint on the production URL. Verify that the scraping, filtering, and email sending functions operate as expected. [Reference: Q&A]
+
+---
+
+## Post-Deployment Monitoring & Edge Case Handling
+
+28. **Implement Logging**: Ensure that all errors (especially in scraper and scheduler) are logged to a file or monitoring service to help detect changes to ss.com’s website structure. [Reference: Important Considerations]
+
+29. **Graceful Degradation**: In the scraper and filtering modules, consider fallback logic if the website structure changes. Notify via the email alert system if such changes occur. [Reference: Key Requirements: Error Handling]
+
+30. **Final Testing**: Run an end-to-end test (either manually or via an automated script) to ensure that the service sends the daily email summary with correct and filtered real estate listings. [Reference: Q&A]
+
+---
+
+This completes the detailed implementation plan for your real estate listing monitoring service.

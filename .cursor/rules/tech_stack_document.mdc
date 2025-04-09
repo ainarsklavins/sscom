@@ -1,0 +1,97 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Tech Stack Document
+
+This document explains the technology choices made for our personal real estate monitoring service. The aim is to fetch updated listings from the ss.com portal daily, filter them based on personal criteria, and send you a complete summary via email using Resend. The following sections provide a clear view of how each part of the technology stack contributes to the overall functionality of the service.
+
+## Frontend Technologies
+
+Even though the service is largely focused on backend processes, the frontend is significant since it is built using Next.js. This choice not only covers server-side rendering but also helps with dynamic content generation when necessary.
+
+- **Next.js**
+  - Acts as both a frontend and a server-side framework, making the application efficient and easier to maintain.
+  - Simplifies building pages that can be dynamically rendered on the server, which is useful for displaying the results in any future enhancements.
+- **React (Implicit in Next.js)**
+  - Provides a component-based architecture, which is user-friendly and makes future enhancements easier to implement in a consistent manner.
+- **CSS Modules/Styling Libraries (if needed)**
+  - Used for styling web pages in a way that is maintainable and modular.
+
+## Backend Technologies
+
+The backbone of our application focuses on periodic data fetching, filtering, and email dispatching using a lightweight, reliable approach without a database.
+
+- **Next.js API Routes and Serverless Functions**
+  - Serves as the main workhorse for fetching, parsing, and filtering real estate listing data.
+  - Allows scheduling tasks (using cron jobs or background processes) to run daily at 6 am EET.
+- **HTTP Request Libraries (fetch, axios, etc.)**
+  - Facilitates retrieving HTML content from ss.com.
+- **HTML Parsing Tools (cheerio or similar)**
+  - Helps in extracting relevant details (posting date, address, room count, etc.) from the fetched HTML content.
+- **Cron Job Scheduling (node-cron or similar)**
+  - Ensures the service runs automatically at planned intervals without manual intervention.
+
+## Infrastructure and Deployment
+
+The choices in infrastructure ensure our service is reliable, scalable, and easy to deploy using modern DevOps practices.
+
+- **Hosting Platform (Vercel or similar)**
+  - Perfectly optimized to work with Next.js, offering seamless deployment and scaling capabilities.
+- **CI/CD Pipelines (GitHub Actions or similar)**
+  - Automate testing and deployment so that new updates can be delivered smoothly and without disruption.
+- **Version Control (Git)**
+  - Provides a secure and organized way of managing changes in the codebase, ensuring any updates or fixes are tracked and maintainable.
+
+## Third-Party Integrations
+
+A few external services enhance the functionality and reliability of our application.
+
+- **Resend**
+  - Manages the email delivery process, ensuring that you receive daily summaries of listings that meet your criteria.
+  - Simplifies integration so that email notifications are both efficient and reliable.
+- **ss.com Portal**
+  - Acts as the data source for real estate listings. The service scrapes multiple pages (with default limit of 10) using determined criteria and filters.
+
+## Security and Performance Considerations
+
+Several measures have been implemented to ensure the service is both secure and high-performing.
+
+- **Security Measures**
+  - Data protection is maintained by ensuring that all data is processed in-memory without being stored persistently.
+  - Robust error handling is built into the service. If changes occur in the ss.com website structure, the application is designed to detect and alert you of these issues.
+  - Secure scheduling and email dispatch minimize the risk of unauthorized access or data leaks.
+
+- **Performance Optimizations**
+  - The application is designed to run as a light, single-purpose service with no extra overhead from databases or other persistent storage systems.
+  - Efficient page scraping and filtering routines ensure that processing remains quick and responsive, regardless of the number of pages monitored.
+  - Use of serverless functions and automatic scaling (if hosted on platforms like Vercel) helps maintain optimal performance under varying loads.
+
+## Conclusion and Overall Tech Stack Summary
+
+To sum up, the technology choices made for this project are driven by the need for efficiency, reliability, and simplicity. Here's a recap:
+
+- **Frontend:**
+  - Next.js (leveraging its React foundation for dynamic and maintainable user interfaces).
+
+- **Backend:**
+  - Next.js API routes with serverless functions to handle the core logic of fetching, parsing, and filtering listings.
+  - Tools like node-cron and HTML parsing libraries ensure the service is automated and efficient.
+
+- **Infrastructure:**
+  - Hosting on platforms like Vercel for seamless deployments.
+  - CI/CD pipelines and Git for consistent and secure code management.
+
+- **Third-Party Integrations:**
+  - Resend for email distribution, ensuring you receive daily, comprehensive summaries of new real estate opportunities.
+
+- **Security & Performance:**
+  - In-memory processing without a database keeps the service lightweight and reduces security risks.
+  - Built-in error handling and alert mechanisms provide robust performance even when the external site changes.
+
+These choices align with the project's goals of delivering up-to-date real estate information directly to you in an accessible format with minimal maintenance requirements. The tech stack has been carefully curated to keep things simple yet powerful, ensuring that the monitoring service remains reliable and effective for personal use.
+
+By using well-established frameworks like Next.js and integrating robust solutions like Resend, we are confident that this project will deliver the accurate, timely information you need when it comes to monitoring real estate listings on ss.com.

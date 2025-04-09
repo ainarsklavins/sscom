@@ -1,0 +1,163 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Implementation Plan for Real Estate Listings Monitor Service
+
+This document provides a step-by-step guide for implementing a service to monitor real estate listings on ss.com, filter them based on configurable criteria, and email a daily summary. The service will be built using Next.js, Resend for emails, and leverage multiple AI tools for potential content enrichment or analysis.
+
+---
+
+## 1. Project Overview
+
+- **Project Goal:** Monitor a specific ss.com URL daily at 6 AM EET to capture new real estate listings, filter them based on defined criteria, and send an email summary containing all details (including images and links).
+- **User Scope:** For personal use only; no UI for filtering changes, and no multi-user support.
+- **Key Considerations:** Gentle scraping to avoid rate limiting, robust error handling for website structure changes, and internal logging/notification in case of failures.
+
+---
+
+## 2. Functionality Requirements
+
+- **Monitoring & Scraping**
+  - Periodically request the configured URL at the scheduled time (6 AM EET daily).
+  - Paginate through up to 10 pages by default (configurable parameter).
+  - Implement a gentle scraping strategy to avoid IP blocking or rate limiting.
+
+- **Filtering Listings**
+  - Listings are considered new based on the combination of posting date, address, room count, m2 area, floor count, m2 price, and total price.
+  - Extract and validate all necessary listing details including images and links.
+
+- **Email Summary**
+  - Utilize Resend to send a daily email with the list of new listings.
+  - The email summary should incorporate all listing data: listing images, property details, and direct links.
+
+- **Error Handling**
+  - Detect if the ss.com website structure changes or if data fetching fails.
+  - Notify the user of errors via highlighted email or logging mechanism.
+
+---
+
+## 3. Technology Stack & Tools
+
+- **Framework:** Next.js (for server-side functionality and scheduling tasks)
+- **Email Service:** Resend
+- **AI Tools:** Claude 3.7 Sonnet, Claude 3.5 Sonnet, GPT o1, GPT o3-mini, Cursor (for any optional AI-based processing, enrichment, or decision analysis)
+
+---
+
+## 4. Security Considerations
+
+Apply core security principles to every component:
+
+- **Authentication & Access Control:**
+  - Since the system is for personal use and no public UI is exposed, secure endpoints if any internal API is provided. Use strong authentication as required.
+  
+- **Input Handling:**
+  - Validate and sanitize all external inputs (e.g., HTML responses from ss.com). Ensure proper encoding when processing and displaying data.
+  - Use parameterized queries or trusted libraries for any external data manipulation.
+
+- **Data Protection:**
+  - Use TLS (HTTPS) for all external communications (Resend, ss.com requests).
+  - Avoid storing sensitive data in plaintext.
+
+- **Error Handling:**
+  - Fail securely by logging errors and not exposing sensitive details in notifications or logs. Use appropriate error messaging to avoid dumping stack traces.
+  
+- **Dependency Management:**
+  - Ensure libraries (Next.js, scraping libraries, etc.) are current, vetted, and have up-to-date security patches.
+
+---
+
+## 5. Implementation Steps
+
+### 5.1 Setup and Configuration
+
+- Initialize a new Next.js project.
+- Configure environmental variables for:
+  - Target URL for ss.com listings.
+  - Email API keys for Resend.
+  - Maximum pagination pages (default=10).
+- Integrate logging to capture errors and alerts related to scraping or email failures.
+
+### 5.2 Scraping Module
+
+- **HTTP Requests:**
+  - Use a trusted HTTP client (e.g., axios or node-fetch) to fetch the target pages.
+  - Implement retry logic and rate limiting to prevent overwhelming ss.com.
+
+- **HTML Parsing:**
+  - Use a library like Cheerio for parsing HTML content safely.
+  - Extract listing data (posting date, address, room count, m2, etc.) with proper input sanitation.
+
+- **Pagination:**
+  - Iterate through pages up to the configured limit.
+  - Include configuration settings so users can adjust the pagination limit without code changes.
+
+### 5.3 Filtering Logic
+
+- Define the criteria for identifying "new listings":
+  - Compare the listing properties (posting date, address, etc.) against the predefined criteria.
+  - Use in-memory filtering since no persistent database is used.
+
+- Create a well-structured filtering function ensuring clarity and secure data processing.
+
+### 5.4 Email Summary Module
+
+- **Email Composition:**
+  - Format an email template including all listing details with images and direct links.
+  - Ensure HTML content is sanitized and encoded properly.
+
+- **Resend Integration:**
+  - Utilize Resend's API for sending emails.
+  - Securely manage API keys, not hardcoded but stored in environment variables.
+
+### 5.5 Scheduling and Cron Jobs
+
+- Implement a scheduling mechanism using Next.js capabilities or popular Node.js schedulers (e.g., node-cron):
+  - Schedule the scraping task to run daily at 6 AM EET.
+  - Validate the scheduled job logs for proper execution and error handling.
+
+### 5.6 Error Handling
+
+- **Detection:**
+  - Monitor if the HTML structure of ss.com changes. If parsing fails or expected elements are absent, trigger an error.
+  - Capture network errors, timeouts, and unexpected responses.
+
+- **Notification:**
+  - If errors occur, notify the user via email or logging.
+  - Log errors with appropriate context without exposing sensitive debugging information.
+
+---
+
+## 6. Testing & Deployment
+
+- **Unit Tests:** Write tests for:
+  - HTML parsing and data extraction using sample HTML snippets.
+  - Filtering logic validations (e.g., checking proper identification of "new listings").
+  - Email template generation and Resend API integration.
+
+- **Integration Tests:** Verify end-to-end processing from scraping to email sending using test endpoints and staged data.
+
+- **Deployment:**
+  - Configure secure, production-ready settings (secure cookies, HTTPS, etc.) following security best practices.
+  - Disable debug modes in production.
+  - Monitor the deployed service for runtime errors and performance issues.
+
+---
+
+## 7. Dependencies & Maintenance
+
+- **Dependency Management:**
+  - Use a lockfile (e.g., package-lock.json) to manage dependencies deterministically.
+  - Regularly update libraries to incorporate security patches.
+
+- **Security Reviews:**
+  - Periodically review code and dependencies for vulnerabilities.
+  - Audit log files and error notifications to detect any misconfigurations or attacks early.
+
+---
+
+This concludes the implementation plan. Adherence to these steps, combined with proactive secure coding practices, will ensure the developed service is robust, secure, and reliable for monitoring real estate listings and sending notifications via email.

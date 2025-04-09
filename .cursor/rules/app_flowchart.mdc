@@ -1,0 +1,20 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+flowchart TD
+  A[Start] --> B[Daily Cron Trigger at 6am EET]
+  B --> C[Fetch Listings from ss.com with Pagination up to 10 Pages]
+  C --> D[Parse HTML using Cheerio]
+  D --> E[Filter Listings based on Posting Date, Address, Room Count, m2, Floor Count, m2 Price, Total Price]
+  E --> F[Summarize New Listings including Images and Links]
+  F --> G[Send Summary Email via Resend]
+  D --> H{Error Occurred}
+  H -->|Yes| I[Send Error Notification Email]
+  H -->|No| J[Continue]
+  I --> J
+  J --> K[Complete Run]
+  K --> L[End]

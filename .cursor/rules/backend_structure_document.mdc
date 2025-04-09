@@ -1,0 +1,110 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Backend Structure Document
+
+This document outlines the backend architecture, hosting solutions, and infrastructure components for the real estate listing monitoring service. The service continuously monitors ss.com for new listings, filters these listings based on specified criteria, and sends out a daily email summary using Resend. Below is a breakdown of all backend aspects in everyday language.
+
+## 1. Backend Architecture
+
+- **Overall Design:**
+  - The backend is built on a Next.js framework, leveraging its built-in support for server-side operations. It uses scheduled tasks (cron jobs) to perform daily scraping and email dispatch operations.
+  - The service is structured as a modular application, where each component (scraping, filtering, emailing, error handling) works in its own task, making the system easy to maintain.
+
+- **Design Patterns and Frameworks:**
+  - Uses a task-based design where each task is triggered by a scheduled cron job.
+  - Emphasizes separation of concerns: web scraping, data processing, and external API interactions (with Resend) are developed as separate modules.
+
+- **Scalability, Maintainability, and Performance:**
+  - Although designed for personal use, the architecture is modular enough to be scaled up if needed.
+  - The use of cron jobs ensures reliable scheduling without impacting performance.
+  - The system incorporates error handling so that failures (like website structure changes) are quickly reported and can be addressed.
+
+## 2. Database Management
+
+- **Database Technology:**
+  - There is no database in this project. Data is scraped, processed on the fly, and then discarded after a daily run.
+
+- **Data Handling Practices:**
+  - All filtering criteria and listing details are handled in-memory during the execution of the scheduled task.
+  - Data is not stored for historical tracking, ensuring that performance is maintained with the simplicity of using temporary data structures.
+
+## 3. Database Schema
+
+- **Database Overview:**
+  - Since there is no persistent storage or historical logging, a traditional database schema is not applicable in this project.
+
+- **Schema Details:**
+  - Data from the ss.com scraping is processed in memory as a collection of objects with fields like posting date, address, room count, square meters, floor count, price per square meter, total price, and a direct link.
+
+## 4. API Design and Endpoints
+
+- **API Approach:**
+  - The service does not expose a public API, as its functionality is limited to internal tasks (scraping and mailing).
+  - Communication with external services is minimal, with the Resend API being used solely for sending emails.
+
+- **Key Endpoints (Internal Use and External Integration):**
+  - **Scraping Module:** Contacts the ss.com website and fetches HTML data using secure HTTP requests.
+  - **Filtering Module:** Processes the fetched data filtering out listings based on hard-coded criteria (e.g., posting date, address, room count, m², floor count, m² price, total price).
+  - **Email Module:** Integrates with Resend via its API to send out daily email summaries. Each email contains full details and links for all listings that pass the filters.
+  - **Error Notification Module:** Monitors for errors in the data fetching or website structure and sends alert emails when issues are detected.
+
+## 5. Hosting Solutions
+
+- **Hosting Environment:**
+  - The backend will be hosted on a server that supports Next.js and the execution of server-side cron jobs.
+  - A cloud provider that supports Node.js environments (like Vercel or AWS) can be used to ensure uptime and performance.
+
+- **Benefits of the Chosen Hosting:
+  - **Reliability:** Managed hosting ensures that cron jobs execute as scheduled with little downtime.
+  - **Scalability:** Even though the service is for personal use, the infrastructure can be adjusted for higher loads if needed.
+  - **Cost-Effectiveness:** Hosting on platforms with a free tier or low-cost plans is sufficient due to the small scale of the service.
+
+## 6. Infrastructure Components
+
+- **Core Components:"
+  - **Load Balancers:** Not required, as the service is low traffic and for personal use.
+  - **Caching Mechanisms:** Basic in-memory caching during runtime may be employed to speed up processing of listings during the scraping operation.
+  - **Content Delivery Networks (CDNs):** May be used for serving static assets if the Next.js application includes any, though this service does not expose a user interface.
+
+- **Working Together:**
+  - Scheduled tasks handle scraping and filtering, while the email module communicates externally with the Resend API.
+  - Error notifications are also handled through external email alerts, ensuring that the system’s health is continuously monitored.
+
+## 7. Security Measures
+
+- **Protocols and Practices:**
+  - Secure HTTP protocols (HTTPS) are used for all external communications, especially when fetching data from ss.com and when sending emails via Resend.
+  - Environment variables are managed carefully to store sensitive information such as API keys and other credentials.
+
+- **User Data and Compliance:**
+  - Although this project is for personal use, standard security practices ensure that any data processed is done so safely and in compliance with modern standards.
+  - Error reporting and logs are handled securely to avoid exposure of sensitive details.
+
+## 8. Monitoring and Maintenance
+
+- **Monitoring Tools and Practices:**
+  - Basic logging is integrated into the cron jobs to trace the process of scraping, filtering, and emailing.
+  - External monitoring tools or alert services can be integrated to notify if the cron job fails or if there is an error during the scraping process.
+
+- **Maintenance Strategies:**
+  - The modular design ensures that individual components (like the scraping module) can be updated independently if ss.com’s structure changes.
+  - Regular review and updates of the email summary content will be necessary to ensure that it remains clear and comprehensive.
+
+## 9. Conclusion and Overall Backend Summary
+
+- **Recap of the Structure:**
+  - The backend is built on a Next.js framework and organized into distinct modules: scraping, filtering, emailing, and error handling. It runs as a scheduled cron job that executes daily at 6 AM EET.
+  - No persistent database is used, as data is handled in memory and discarded after processing. This approach keeps operations fast and simple.
+  - Integration with the Resend API ensures that a well-formatted email summary is sent each day, while error notifications alert the developer to issues.
+  - The hosting solution and infrastructure components are chosen to balance reliability, performance, and cost-effectiveness, keeping in mind that this is a personal-use service.
+
+- **Unique Aspects:**
+  - The service’s simplicity and targeted functionality make it unique; it focuses on a very specific use case with clear, defined tasks and minimal overhead.
+  - Despite the lack of a database, the design is robust, thanks to modular handling and secure communication methods.
+
+This concludes the overview of the backend structure for the real estate listing monitoring service. Any developer or stakeholder should now have a clear picture of how the backend operates and how all components interrelate.

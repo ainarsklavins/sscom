@@ -1,0 +1,106 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+## Project Overview
+
+* **Type:** Monitoring Service (Personal Utility)
+* **Description:** A service to monitor real estate listings on ss.com, filtering new additions based on various criteria and sending a daily email summary via Resend.
+* **Primary Goal:** Automatically fetch and filter new listings from [ss.com](https://www.ss.com/lv/real-estate/flats/riga/centre/sell/), and email a comprehensive summary daily at 6 AM EET.
+
+## Project Structure
+
+### Framework-Specific Routing
+
+* **Directory Rules:**
+
+    * **Next.js 14 (App Router):** Use the `app/` directory with nested route folders. For example, route components should follow the `app/[route]/page.tsx` convention.
+    * Example 1: "Next.js 14 (App Router)" → `app/[route]/page.tsx` conventions
+    * Example 2: "Next.js (Pages Router)" → `pages/[route].tsx` pattern *(Not used as per App Router enforcement)*
+    * Example 3: "React Router 6" → `src/routes/` with `createBrowserRouter` *(Non-applicable for this project)*
+
+### Core Directories
+
+* **Versioned Structure:**
+
+    * **app/api:** Holds API route handlers where tasks like scraping and scheduling are handled (e.g., daily cron job endpoint).
+    * Example 1: `app/api/scraper/route.ts` → API endpoint for scraping and processing ss.com data
+    * Example 2: `app/api/cron/route.ts` → Endpoint for triggering scheduled tasks if needed
+
+### Key Files
+
+* **Stack-Versioned Patterns:**
+
+    * **app/email/layout.tsx:** (If email templating or layout is required, though minimal for this service)
+    * Example 1: `app/api/scraper/route.ts` → Implements Next.js 14 API route logic for data fetching and filtering
+    * Example 2: `app/api/cron/route.ts` → Implements scheduling logic (cron integration) for triggering the daily email summary
+
+## Tech Stack Rules
+
+* **Version Enforcement:**
+
+    * **next@14:** Enforce use of the App Router pattern. Avoid using legacy patterns like `getInitialProps`.
+    * **Resend (Email Service):** Secure usage of API keys through environment variables; ensure that email templates adhere to Resend's best practices.
+    * **Scraping Tools:** Use gentle scraping strategies to avoid rate limiting or blocking by ss.com.
+
+## PRD Compliance
+
+* **Non-Negotiable:**
+
+    * "Send a daily email summary of new listings using Resend at 6 AM EET with comprehensive details for each listing." – This requirement must be met, including detailed error handling for changes in website structure or data fetch failures.
+
+## App Flow Integration
+
+* **Stack-Aligned Flow:**
+
+    * Example: "Next.js 14 Auth Flow → `app/api/scraper/route.ts` triggers the scraping, filtering, and email generation process."
+    * The daily job should parse up to 10 pages (configurable) and process each page following the defined scraping, filtering, and email summary flow.
+
+## Best Practices
+
+* **Next.js**
+
+    * Use the App Router with nested folder structures. Avoid mixing legacy patterns.
+    * Secure API routes with proper error handling to catch and log failures in data fetching or structure changes.
+    * Implement retry mechanisms for transient errors during HTTP requests to ss.com.
+
+* **Resend**
+
+    * Secure API keys through environment variables.
+    * Format emails clearly, including all listing details and a clickable link to the original listing.
+    * Test email delivery to ensure consistency, especially on scheduled dispatches at 6 AM EET.
+
+* **Scraping & Data Processing**
+
+    * Respect robots.txt and avoid heavy load on the ss.com servers.
+    * Use gentle scraping techniques and handle pagination up to a configurable limit (default 10 pages).
+    * Validate and filter listings rigorously based on defined criteria (posting date, address, room count, m2, floor count, m2 price, total price).
+
+## Rules
+
+* Derive folder/file patterns **directly** from tech stack documentation and versioning.
+* If Next.js 14 App Router is selected: enforce an `app/` directory with nested route folders exclusively.
+* If using Pages Router: use the `pages/*.tsx` flat structure *(not applicable for this project as per PRD)*.
+* Mirror this logic for other frameworks if needed (e.g., React Router, SvelteKit) but do not mix version patterns; for instance, avoid using `pages/` in an App Router project.
+
+## Rules Metrics
+
+Before starting the project development, create a metrics file in the root of the project called `cursor_metrics.md`.
+
+### Instructions:
+
+* Each time a cursor rule is used as context, update `cursor_metrics.md`.
+* Use the following format for `cursor_metrics.md:`
+
+# Rules Metrics
+
+## Usage
+
+The number of times rules is used as context
+
+* rule-name.mdc: 5
+* another-rule.mdc: 2
+* ...other rules

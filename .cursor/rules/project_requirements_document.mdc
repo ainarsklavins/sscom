@@ -1,0 +1,109 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Project Requirements Document
+
+## 1. Project Overview
+
+This project is about creating a service that monitors real estate listings on the ss.com portal. The main idea is to automatically check the provided URL and its paginated pages for new property listings every day at 6 am EET. The service will fetch the webpage content, parse and filter out listings based on specific criteria (such as posting date, address, room count, square meters, floor count, price per square meter, and total price), and then compile all the necessary details into a daily email summary. This way, you will always be up to date on new properties without having to manually browse the portal.
+
+The service is being built to make the property search process more efficient and ensure that no potential opportunity slips by unnoticed. The core objectives are to reliably check for new listings, apply detailed filtering logic to select only the properties meeting your criteria, and deliver a complete summary via email using Resend every day. The success of the project is measured by its ability to detect changes on ss.com, correctly filter out unwanted listings, and send an accurate and comprehensive summary timely.
+
+## 2. In-Scope vs. Out-of-Scope
+
+**In-Scope:**
+
+*   Use Next.js as the primary framework to build the service.
+*   Daily or configurable interval monitoring of the provided real estate URL.
+*   Automated handling of pagination – checking up to a default limit of 10 pages (with a configurable option to change this number).
+*   Scraping and filtering of listings based on criteria: posting date, address, room count, square meters, floor count, m2 price, and total price.
+*   Aggregating complete details of each qualifying listing including images, extra description, and the link to the original listing.
+*   Sending a detailed email summary using Resend every day at 6 am EET.
+*   Robust error handling to notify if the ss.com website structure changes or a data fetch fails.
+
+**Out-of-Scope:**
+
+*   Incorporating a user interface (UI) for modifying filtering criteria; the filters remain fixed.
+*   Storing historical listings data in a database or any persistent storage.
+*   Supporting multiple users – the service is for personal use only.
+*   Adding additional integrations beyond Next.js and Resend for this version.
+
+## 3. User Flow
+
+When the service starts, it initializes a scheduled task (a cron job or background process) to run every day at 6 am EET. The job triggers the monitoring process that begins by performing an HTTP request to fetch the main listing page on ss.com. The service then constructs URLs for the subsequent paginated pages and loops through each page (up to 10 by default) to gather as many recent listings as available.
+
+After fetching the pages, the service parses the HTML content to extract relevant listing information such as the posting date, address, room count, square meters, floor count, m2 price, and total price. Each listing is compared to the defined filtering criteria, and only those that satisfy these conditions are selected. Finally, the service aggregates filtered listings, formats them into a clear email summary with all details (including images and the direct link to the listing), and sends the email using Resend.
+
+## 4. Core Features
+
+*   **Real Estate Monitoring Service:**\
+    Automatically checks a given ss.com real estate URL on a scheduled basis (daily at 6 am EET) to detect new listings.
+*   **Pagination Handling:**\
+    Dynamically constructs and navigates through paginated pages (default up to 10 pages; configurable) to ensure thorough monitoring.
+*   **HTML Scraping and Data Parsing:**\
+    Downloads HTML content and uses an HTML parser to extract listing data such as posting date, address, room count, square meters, floor count, price per square meter, and total price.
+*   **Filtering Criteria Implementation:**\
+    Compares each listing's extracted data against predefined criteria (e.g., minimum number of rooms, specific price ranges) to filter out irrelevant properties.
+*   **Email Summary Generation:**\
+    Formats a detailed summary of matching listings including images, extra descriptions, and direct links, providing all necessary details in a user-friendly manner.
+*   **Integration with Resend:**\
+    Utilizes Resend to send out automated summary emails on schedule, ensuring that the latest property updates are delivered daily.
+*   **Error Handling and Notifications:**\
+    Implements robust error handling to detect issues such as changes in the website structure or data fetch failures, generating notifications to alert the user in case of problems.
+
+## 5. Tech Stack & Tools
+
+*   **Frontend/Framework:**
+
+    *   Next.js: Used to build the service with both server-side rendering capabilities and API integrations.
+
+*   **Messaging & Email Service:**
+
+    *   Resend: Used for sending out summary emails with all the required detailed listing information.
+
+*   **AI & Code Assistance Tools:**
+
+    *   Claude 3.7 Sonnet and Claude 3.5 Sonnet: For intelligent code assistance.
+    *   GPT o1 and GPT o3-mini: For advanced code generation and reasoning.
+    *   Cursor: An IDE that provides real-time coding suggestions and integrations.
+
+## 6. Non-Functional Requirements
+
+*   **Performance:**\
+    The service should scrape and process up to 10 pages quickly, ensuring that the email is generated within a reasonable time window during the scheduled run.
+*   **Security:**\
+    Ensure secure HTTP requests when fetching data and sending emails. Handle sensitive configurations (such as API keys for Resend) using environment variables.
+*   **Reliability:**\
+    Scheduled tasks must run daily at the specified time without fail. The system should include retry mechanisms in case of fetch failures due to network issues.
+*   **Usability:**\
+    Even though there’s no user interface, the email summary must be formatted clearly and provide comprehensive details about each listing so that reviewing the properties is straightforward.
+*   **Scalability:**\
+    Designed for personal use with no high concurrency requirements. The system should, however, be modular enough to adjust things like page limits easily if needed.
+
+## 7. Constraints & Assumptions
+
+*   The service will run on a server environment that supports Next.js and scheduled background tasks (cron jobs).
+*   The ss.com website structure is assumed to remain relatively consistent, although the service includes error handling in case of changes.
+*   No database is used; previous listings are not stored. The system relies solely on comparing current fetched data based on posting dates and listing details.
+*   The filtering parameters (such as minimum room count, price ranges, etc.) are hard-coded and not user-configurable via a UI.
+*   The service is intended for personal use only and is not designed to handle multiple user profiles.
+*   Availability of external libraries and services like Resend is assumed during operation.
+
+## 8. Known Issues & Potential Pitfalls
+
+*   **Website Structure Changes:**\
+    Changes to the HTML structure of ss.com can break the parsing logic. Keep the parsing logic modular so that it can be easily updated if the structure changes.
+*   **Rate Limiting or Blocking:**\
+    Scraping through multiple pages could trigger rate limiting or blocking from ss.com. Implement gentle scraping strategies (e.g., delays between requests) to reduce this risk.
+*   **No Historical Data Comparison:**\
+    Since there is no database for storing historical results, the service bases comparisons solely on the current run. This could result in duplicate alerts if listings are not consistently filtered by the posting date.
+*   **Error Handling Limitations:**\
+    While error notifications are designed in, network issues or prolonged ss.com downtimes might lead to missed runs. Consider integrating logging and possibly fallback notifications.
+*   **Configurable Page Limits:**\
+    Although the default page limit is 10, care should be taken that increasing this limit significantly does not adversely affect performance.
+
+This document now serves as a detailed blueprint for all upcoming technical documents (Tech Stack, Frontend Guidelines, Backend Structure, etc.) ensuring that the AI model has all necessary details to work without ambiguity.
