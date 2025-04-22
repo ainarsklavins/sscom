@@ -1,106 +1,142 @@
 import { NextResponse } from 'next/server';
-import config from '@/lib/config'; // Import config
+import { monitors, globals } from '@/lib/config'; // Import new config structure
 import { scrapeListingPages } from '@/lib/scraper';
 import { processAndFilterListings } from '@/lib/filter';
 import { sendListingSummaryEmail } from '@/lib/email';
-import { readSeenListingsFromS3, writeSeenListingsToS3 } from '@/lib/s3Helper'; // Import S3 helpers
+import { readSeenListingsFromS3, writeSeenListingsToS3 } from '@/lib/s3Helper';
 
 console.log('🚦 API route handler loaded: /api/run-monitor');
 
 export async function GET(request) {
     console.log('▶️ Received request to /api/run-monitor');
 
-    // --- Authorization Check --- 
-    const expectedSecret = config.cronSecret;
+    // --- Authorization Check (using globals.cronSecret) --- 
+    const expectedSecret = globals.cronSecret;
     const authHeader = request.headers.get('authorization');
 
-    // --- DEBUGGING LOGS ---
-    console.log(`[DEBUG] Expected Secret (from config): '${expectedSecret}'`);
-    console.log(`[DEBUG] Received Authorization Header: '${authHeader}'`);
-    console.log(`[DEBUG] Comparison String: 'Bearer ${expectedSecret}'`);
-    // --- END DEBUGGING LOGS ---
-
-    if (expectedSecret) { // Only check if CRON_SECRET is configured
+    if (expectedSecret) {
         if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
             console.warn('🚫 Unauthorized attempt to trigger monitor job.');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         console.log('🔑 Authorization successful.');
     } else {
-        console.warn('⚠️ Monitor job endpoint is unsecured (CRON_SECRET not set).');
+        console.warn('⚠️ Monitor job endpoint is unsecured (CRON_SECRET not set in globals).');
     }
-    // --- End Authorization Check --- 
+    // --- End Authorization Check ---
 
-    let emailPreviewHtml = null;
-    let seenUrlsSet = new Set();
-    let newListingUrls = [];
+    const results = []; // Store results for each monitor
+    let overallStatus = 'success'; // Track if any monitor fails
 
-    try {
-        // 0. Read previously seen listings from S3
-        console.log('[Step 0/4] Reading seen listings from S3...');
-        seenUrlsSet = await readSeenListingsFromS3();
-        console.log(`[Step 0/4] Loaded ${seenUrlsSet.size} previously seen URLs.`);
+    // --- Loop through each monitor defined in config --- 
+    console.log(`🏁 Starting processing for ${monitors.length} monitor(s)...`);
 
-        // 1. Scrape pages using config
-        const maxPagesToScrape = config.maxPagesToScrape;
-        console.log(`[Step 1/4] Scraping up to ${maxPagesToScrape} pages...`);
-        const htmlPages = await scrapeListingPages(maxPagesToScrape);
+    for (const monitor of monitors) {
+        const monitorId = monitor.id;
+        console.log(`
+--- Processing Monitor: ${monitorId} ---`);
+        let monitorResult = {
+            monitorId: monitorId,
+            status: 'success',
+            message: '',
+            pagesScraped: 0,
+            listingsMatchingCriteria: 0,
+            newListingCount: 0,
+            emailPreviewHtml: null,
+            errorDetails: null,
+        };
 
-        if (!htmlPages || htmlPages.length === 0) {
-            console.warn('⚠️ No pages were successfully scraped. Skipping further processing.');
-            // Optionally, still write the (unchanged) seen list back to S3 if desired, but likely unnecessary
-            return NextResponse.json({ message: 'Scraping completed, but no pages fetched.', pagesScraped: 0, listingsFound: 0, newListingCount: 0 });
-        }
-        console.log(`[Step 1/4] Scraping completed. Fetched ${htmlPages.length} pages.`);
+        try {
+            // 1. Read previously seen listings from S3 for this monitor
+            console.log(`[${monitorId} - Step 1/6] Reading seen listings from S3...`);
+            const seenUrlsSet = await readSeenListingsFromS3(monitorId);
+            console.log(`[${monitorId} - Step 1/6] Loaded ${seenUrlsSet.size} previously seen URLs.`);
 
-        // 2. Filter listings based on criteria (price, rooms, etc.)
-        console.log('[Step 2/4] Processing and filtering listings by criteria...');
-        const criteriaFilteredListings = processAndFilterListings(htmlPages);
-        console.log(`[Step 2/4] Found ${criteriaFilteredListings.length} listings matching criteria.`);
+            // 2. Scrape pages using monitor config
+            console.log(`[${monitorId} - Step 2/6] Scraping up to ${monitor.maxPages} pages...`);
+            const htmlPages = await scrapeListingPages(monitor);
+            monitorResult.pagesScraped = htmlPages.length;
 
-        // 3. Filter out already seen listings
-        console.log('[Step 3/4] Filtering out previously seen listings...');
-        const newUnseenListings = criteriaFilteredListings.filter(listing => {
-            if (!listing.link) return false; // Skip if link is missing
-            const hasBeenSeen = seenUrlsSet.has(listing.link);
-            if (!hasBeenSeen) {
-                newListingUrls.push(listing.link); // Keep track of new URLs to add later
+            if (htmlPages.length === 0) {
+                console.warn(`[${monitorId} - Step 2/6] No pages were successfully scraped. Skipping further processing for this monitor.`);
+                monitorResult.message = 'Scraping completed, but no pages fetched.';
+                results.push(monitorResult); // Add result and continue to next monitor
+                continue;
             }
-            return !hasBeenSeen;
-        });
-        console.log(`[Step 3/4] Found ${newUnseenListings.length} new, unseen listings.`);
+            console.log(`[${monitorId} - Step 2/6] Scraping completed.`);
 
-        // 4. Send email summary (or generate preview) ONLY for new listings
-        console.log('[Step 4/4] Processing email step for new listings...');
-        emailPreviewHtml = await sendListingSummaryEmail(newUnseenListings);
-        console.log('[Step 4/4] Email step completed.');
+            // 3. Filter listings based on monitor criteria
+            console.log(`[${monitorId} - Step 3/6] Processing and filtering listings by criteria...`);
+            // Pass monitor.filters, monitorId, AND monitor.type
+            const criteriaFilteredListings = processAndFilterListings(htmlPages, monitor.filters, monitorId, monitor.type);
+            monitorResult.listingsMatchingCriteria = criteriaFilteredListings.length;
+            console.log(`[${monitorId} - Step 3/6] Found ${criteriaFilteredListings.length} listings matching criteria.`);
 
-        // 5. Update seen list in S3 if new listings were found
-        if (newListingUrls.length > 0) {
-            console.log(`[Step 5/5] Updating seen listings in S3...`);
-            newListingUrls.forEach(url => seenUrlsSet.add(url));
-            await writeSeenListingsToS3(seenUrlsSet);
-            console.log(`[Step 5/5] S3 update complete.`);
-        } else {
-            console.log(`[Step 5/5] No new listings found, S3 update not required.`);
+            // 4. Filter out already seen listings
+            console.log(`[${monitorId} - Step 4/6] Filtering out previously seen listings...`);
+            let newListingUrls = [];
+            const newUnseenListings = criteriaFilteredListings.filter(listing => {
+                if (!listing.link) return false;
+                const hasBeenSeen = seenUrlsSet.has(listing.link);
+                if (!hasBeenSeen) {
+                    newListingUrls.push(listing.link); // Track new URLs
+                }
+                return !hasBeenSeen;
+            });
+            monitorResult.newListingCount = newUnseenListings.length;
+            console.log(`[${monitorId} - Step 4/6] Found ${newUnseenListings.length} new, unseen listings.`);
+
+            // 5. Send email summary (or generate preview) ONLY for new listings
+            console.log(`[${monitorId} - Step 5/6] Processing email step for new listings...`);
+            if (newUnseenListings.length > 0) {
+                // Pass the monitor object for recipients etc.
+                monitorResult.emailPreviewHtml = await sendListingSummaryEmail(newUnseenListings, monitor);
+                console.log(`[${monitorId} - Step 5/6] Email step completed.`);
+            } else {
+                console.log(`[${monitorId} - Step 5/6] No new listings, email step skipped.`);
+            }
+
+            // 6. Update seen list in S3 if new listings were found
+            console.log(`[${monitorId} - Step 6/6] Processing S3 update step...`);
+            if (newListingUrls.length > 0) {
+                console.log(`[${monitorId} - Step 6/6] Updating seen listings in S3...`);
+                newListingUrls.forEach(url => seenUrlsSet.add(url));
+                // Pass monitorId for the file key
+                await writeSeenListingsToS3(seenUrlsSet, monitorId);
+                console.log(`[${monitorId} - Step 6/6] S3 update complete.`);
+            } else {
+                console.log(`[${monitorId} - Step 6/6] No new listings found, S3 update not required.`);
+            }
+
+            monitorResult.message = 'Monitor processed successfully.';
+
+        } catch (error) {
+            console.error(`❌ [${monitorId}] Error during processing:`, error);
+            monitorResult.status = 'error';
+            monitorResult.message = `Error processing monitor: ${error.message}`;
+            monitorResult.errorDetails = error.stack; // Include stack trace for debugging
+            overallStatus = 'partial_error'; // Mark overall job as having issues
+            // Optionally send an error notification specific to this monitor failure
         }
 
-        // Respond successfully
-        return NextResponse.json({
-            message: 'Monitoring process completed successfully.',
-            pagesScraped: htmlPages.length,
-            listingsMatchingCriteria: criteriaFilteredListings.length,
-            newListingCount: newUnseenListings.length,
-            emailPreviewHtml: config.sendEmailMode !== 'send' ? emailPreviewHtml : null,
-        });
+        results.push(monitorResult);
+        console.log(`--- Finished Monitor: ${monitorId} | Status: ${monitorResult.status} ---`);
 
-    } catch (error) {
-        console.error('❌ Error during monitoring process execution:', error);
-        // Consider sending an error notification email here
-        // await sendErrorNotificationEmail(error); 
-        return NextResponse.json(
-            { error: 'Internal Server Error', details: error.message },
-            { status: 500 }
-        );
+    } // End of loop through monitors
+
+    // --- Final Response --- 
+    console.log(`
+🏁🏁 Finished processing all monitors. Overall status: ${overallStatus}`);
+
+    const responseBody = {
+        overallStatus: overallStatus,
+        results: results,
+    };
+
+    // Conditionally remove preview HTML if in 'send' mode before sending response
+    if (globals.sendEmailMode === 'send') {
+        responseBody.results.forEach(res => { res.emailPreviewHtml = null; });
     }
+
+    return NextResponse.json(responseBody);
 }
