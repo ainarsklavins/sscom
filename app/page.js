@@ -77,9 +77,11 @@ export default function HomePage() {
   };
   const handleTriggerMonitor = async (monitorId) => {
     const monitorName = config.monitors.find(m => m.id === monitorId)?.name || monitorId;
+    const apiUrl = `/api/trigger/${monitorId}`; // Construct URL
+    console.log('🚀 Triggering API call to:', apiUrl); // Log the URL
     toast.info(`🚀 Triggering monitor: ${monitorName}...`);
     try {
-      const response = await fetch(`/api/trigger/${monitorId}`, { method: 'POST' });
+      const response = await fetch(apiUrl, { method: 'POST' }); // Use the constructed URL
       const result = await response.json();
 
       if (!response.ok || result.status === 'error') {
