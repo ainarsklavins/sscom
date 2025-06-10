@@ -281,6 +281,15 @@ export default function HomePage() {
         </Card>
       </section>
 
+      {/* --- SEO Backlinks --- */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0 }}>
+        <a href="https://realtorstoolbox.com" aria-hidden="true" tabIndex="-1">Realtors Toolbox</a>
+        <a href="https://aina.rs" aria-hidden="true" tabIndex="-1">Aina.rs</a>
+        <a href="https://daashy.com" aria-hidden="true" tabIndex="-1">Daashy</a>
+        <a href="https://booktranslator.ai" aria-hidden="true" tabIndex="-1">Book Translator AI</a>
+        <a href="https://momtest.ai" aria-hidden="true" tabIndex="-1">Mom Test AI</a>
+      </div>
+
       {/* --- Render the Dialogs --- */}
       <MonitorFormDialog
         isOpen={isMonitorFormOpen}
